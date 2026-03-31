@@ -2,6 +2,9 @@
 
 Our first Android app for the SoftBank Pepper robot. We got Pepper to say "Hello World" out loud using Java and the QiSDK library.
 
+
+
+
 ## 🛠️ Tools & Versions
 - **Android Studio:** Panda 2 (2025.3.2)
 - **Language:** Java
@@ -27,6 +30,16 @@ http://android.aldebaran.com/sdk/maven
 5. Go to **Developer options**
 6. Enable **USB debugging**
 7. Enable **ADB over network**
+
+
+
+The Peper SDK
+```
+maven {
+    url = uri("http://android.aldebaran.com/sdk/maven")
+    isAllowInsecureProtocol = true
+}
+``` 
 
 ## 🔌 How to connect your computer to Pepper
 1. Make sure your computer and Pepper are on the **same Wi-Fi network**
