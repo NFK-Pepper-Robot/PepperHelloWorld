@@ -22,6 +22,8 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
     private var isDancing = false
     private var danceThread: Thread? = null
     private var currentDance = R.raw.dance_b001
+    private var handshakeInProgress = false
+    private var personDetected = false
     private val handler = Handler(Looper.getMainLooper())
     private var visualizerAnimators = mutableListOf<ValueAnimator>()
 
@@ -54,21 +56,90 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
     override fun onRobotFocusGained(qiContext: QiContext) {
         this.qiContext = qiContext
-        setupBumperSensor(qiContext)
-        sayText("I am ready to dance!")
+        setupTouchSensors(qiContext)
+        setupPersonDetection(qiContext)
+        sayText("I am ready!")
     }
 
-    private fun setupBumperSensor(qiContext: QiContext) {
+    private fun setupPersonDetection(qiContext: QiContext) {
         try {
-            val bumper: TouchSensor = qiContext.touch.getSensor("Bumper/FrontLeft")
-            bumper.addOnStateChangedListener { touchState ->
-                if (touchState.touched) {
-                    if (isDancing) stopDancing()
-                    else qiContext.let { startDancing(it, "Dance 1") }
+            val humanAwareness = qiContext.humanAwareness
+            humanAwareness.addOnHumansAroundChangedListener { humans ->
+                if (humans.isNotEmpty() && !personDetected && !handshakeInProgress && !isDancing) {
+                    personDetected = true
+                    handler.post {
+                        findViewById<TextView>(R.id.statusText).text = "👀 Person detected!"
+                    }
+                    Thread.sleep(2000)
+                    Thread { initiateHandshake(qiContext) }.start()
+                } else if (humans.isEmpty()) {
+                    personDetected = false
+                    handler.post {
+                        if (!isDancing) findViewById<TextView>(R.id.statusText).text = "Choose a dance!"
+                    }
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("Pepper", "Bumper setup failed: " + e.message)
+            android.util.Log.e("Pepper", "Person detection failed: " + e.message)
+        }
+    }
+
+    private fun initiateHandshake(qiContext: QiContext) {
+        if (handshakeInProgress) return
+        handshakeInProgress = true
+
+        handler.post {
+            findViewById<TextView>(R.id.statusText).text = "👋 Handshake initiated!"
+        }
+
+        try {
+            sayText("Nice to meet you! Let's shake hands!")
+            Thread.sleep(2500)
+            val animation = AnimationBuilder.with(qiContext)
+                .withResources(R.raw.handshake_b001)
+                .build()
+            val animate = AnimateBuilder.with(qiContext)
+                .withAnimation(animation)
+                .build()
+            animate.run()
+        } catch (e: Exception) {
+            android.util.Log.e("Pepper", "Handshake failed: " + e.message)
+        } finally {
+            handshakeInProgress = false
+            handler.post {
+                if (!isDancing) findViewById<TextView>(R.id.statusText).text = "Choose a dance!"
+            }
+        }
+    }
+
+    private fun setupTouchSensors(qiContext: QiContext) {
+        val headSensor: TouchSensor = qiContext.touch.getSensor("Head/Touch")
+        headSensor.addOnStateChangedListener { touchState ->
+            if (touchState.touched && !isDancing) {
+                Thread { runAnimation(qiContext, R.raw.wave_right_b001) }.start()
+            }
+        }
+
+        val leftHandSensor: TouchSensor = qiContext.touch.getSensor("LHand/Touch")
+        leftHandSensor.addOnStateChangedListener { touchState ->
+            if (touchState.touched && !isDancing) {
+                Thread { runAnimation(qiContext, R.raw.no_b001) }.start()
+            }
+        }
+
+        val rightHandSensor: TouchSensor = qiContext.touch.getSensor("RHand/Touch")
+        rightHandSensor.addOnStateChangedListener { touchState ->
+            if (touchState.touched && !isDancing) {
+                Thread { runAnimation(qiContext, R.raw.point_b001) }.start()
+            }
+        }
+
+        val bumperSensor: TouchSensor = qiContext.touch.getSensor("Bumper/FrontLeft")
+        bumperSensor.addOnStateChangedListener { touchState ->
+            if (touchState.touched) {
+                if (isDancing) stopDancing()
+                else qiContext.let { startDancing(it, "Dance 1") }
+            }
         }
     }
 
@@ -119,6 +190,20 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
             findViewById<TextView>(R.id.statusText).text = "Choose a dance!"
         }
         sayText("Dance finished!")
+    }
+
+    private fun runAnimation(qiContext: QiContext, resourceId: Int) {
+        try {
+            val animation = AnimationBuilder.with(qiContext)
+                .withResources(resourceId)
+                .build()
+            val animate = AnimateBuilder.with(qiContext)
+                .withAnimation(animation)
+                .build()
+            animate.run()
+        } catch (e: Exception) {
+            android.util.Log.e("Pepper", "Animation failed: " + e.message)
+        }
     }
 
     private fun startVisualizer() {
