@@ -1,25 +1,27 @@
-# Pepper-Week15-Dance
+# Pepper-Week16-Interaction
 
-## Week 15 Task
-Implement a dance behavior. The robot starts dancing when triggered via the tablet.
-
-## Collaboration
-- **Zkaria** — Implemented the dance behavior on the robot (animations, QiSDK logic, bumper trigger)
-- **Yazan** — Implemented the tablet UI (buttons and visual display)
+## Week 16 Task
+Implement touch interaction: when the robot is touched, it performs a simple gesture. Add person detection and gaze detection; if the person is looking at the robot, the robot initiates a handshake.
 
 ## What the app does
-- Tablet shows two dance buttons: **Dance 1** and **Dance 2**
-- Press a button on the tablet → Pepper starts dancing
-- Press the front bumper → Pepper starts/stops dancing
-- Music visualizer animates on the tablet while Pepper dances
-- Press **STOP** to stop the dance
-- Pepper says "Let's dance!" before starting and "Dance finished!" when stopped
 
-## Dance animations
-| Button | Animation file | Description |
-|--------|---------------|-------------|
-| Dance 1 | dance_b001.qianim | Aldebaran standard dance |
-| Dance 2 | dance_b002.qianim | Funny dance animation |
+### Touch Interaction
+- **Head** → Hello animation
+- **Left hand** → Nice reaction animation  
+- **Right hand** → Sad reaction animation
+- **Front bumper** → Start/stop dance
+
+### Person Detection & Handshake
+- Pepper detects when a person is standing in front of it
+- Tablet shows "👀 Person detected!"
+- After 2 seconds → Pepper says "Nice to meet you! Let's shake hands!"
+- Pepper performs handshake animation (extends right hand)
+- Tablet shows "👋 Handshake initiated!"
+
+### Dance
+- Two dance buttons on tablet: Dance 1 and Dance 2
+- Music visualizer animates while Pepper dances
+- Stop button to end dance
 
 ## Tech stack
 | Tool | Version |
